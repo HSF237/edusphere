@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Replace with your Supabase Project URL and Anon Key
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder-url.supabase.co'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-anon-key'
+// Hardcoded for final production sync
+const supabaseUrl = 'https://nzmngjspohqbpjuizdun.supabase.co'
+const supabaseAnonKey = 'sb_publishable_0NJNnxfOaK07bxElTYl4MQ_B8sLlqCd'
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
