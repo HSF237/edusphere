@@ -15,7 +15,7 @@ export default function DashboardRouter({ session }) {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/users/profile/${session.user.id}`);
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/users/profile/${session.user.id}`);
         setProfile(response.data);
       } catch (error) {
         if (error.response?.status === 404) {

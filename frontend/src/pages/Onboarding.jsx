@@ -14,7 +14,7 @@ export default function Onboarding({ session, onComplete }) {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/users/onboard`, {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/users/onboard`, {
         userId: session.user.id,
         role,
         name,

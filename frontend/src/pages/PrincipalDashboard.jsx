@@ -21,7 +21,7 @@ export default function PrincipalDashboard({ profile }) {
     try {
       setLoading(true);
       // Fetch school info
-      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/schools/${profile.schoolId}`);
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/schools/${profile.schoolId}`);
       setSchoolData(res.data.school);
       
       // Realistically we'd fetch counts from backend

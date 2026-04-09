@@ -36,7 +36,7 @@ export default function TeacherDashboard({ profile }) {
   const fetchMyClasses = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/schools/${profile.schoolId}/classes`);
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/schools/${profile.schoolId}/classes`);
       setClasses(res.data);
       if (res.data.length > 0) setSelectedClass(res.data[0]._id);
     } catch (err) {
@@ -54,7 +54,7 @@ export default function TeacherDashboard({ profile }) {
 
   const fetchStudents = async (classId) => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/students/class/${classId}`);
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/students/class/${classId}`);
       setStudents(res.data);
     } catch (err) {
       console.error(err);
@@ -64,7 +64,7 @@ export default function TeacherDashboard({ profile }) {
   const handleAddStudent = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/students`, { ...newStudent, classId: selectedClass, schoolId: profile.schoolId });
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/students`, { ...newStudent, classId: selectedClass, schoolId: profile.schoolId });
       setNewStudent({ admissionNumber: '', rollNumber: '', name: '', gender: 'Male', parentName: '', age: '', dob: '', gmail: '' });
       fetchStudents(selectedClass);
       alert('Student added successfully!');
