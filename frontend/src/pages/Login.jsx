@@ -1,143 +1,167 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import { useNavigate, Link } from 'react-router-dom';
-import { GraduationCap, Mail, MessageSquare, ArrowRight, ArrowLeft } from 'lucide-react';
+import React, { useState } from 'react';
+import { base44 } from '@/api/base44Client';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { GraduationCap, Mail, Lock, Loader2, ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { motion } from 'framer-motion';
 
 export default function Login() {
-  const [loading, setLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState('');
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [formData, setFormData] = useState({ email: '', password: '' });
 
-  useEffect(() => {
-    const savedRole = localStorage.getItem('intendedRole');
-    if (savedRole) {
-      setRole(savedRole);
-    } else {
-      // If no role, go back to selection
-      navigate('/role-selection');
-    }
-  }, [navigate]);
-
-  const handleAuth = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      if (isSignUp) {
-        const { error } = await supabase.auth.signUp({ email, password });
-        if (error) throw error;
-        alert('Verification email sent! Check your inbox.');
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-      }
+      await base44.auth.login(formData.email, formData.password);
+      await finishLogin();
     } catch (error) {
-      alert(error.message);
-    } finally {
-      setLoading(false);
+      console.error('Login failed:', error);
+      alert('Invalid credentials. Please try again.');
+    }
+    setLoading(false);
+  };
+
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
+    try {
+      await base44.auth.loginWithGoogle();
+      await finishLogin();
+    } catch (error) {
+      console.error('Google login failed:', error);
+    }
+    setGoogleLoading(false);
+  };
+
+  const finishLogin = async () => {
+    const user = await base44.auth.me();
+    if (!user.profile_completed) {
+      navigate(createPageUrl('RoleSelection'));
+    } else {
+      const dashboard = user.user_role === 'principal' ? 'PrincipalDashboard' : 'TeacherDashboard';
+      navigate(createPageUrl(dashboard));
     }
   };
 
-  const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-    });
-    if (error) alert(error.message);
-  };
-
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 relative">
-      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-purple-900 via-black to-pink-900 opacity-50"></div>
-      
-      <div className="glass-panel w-full max-w-lg p-12 relative z-10 border-white/10 animate-in fade-in zoom-in duration-500">
-        <button onClick={() => navigate('/role-selection')} className="absolute top-8 left-8 text-white/40 hover:text-white flex items-center gap-2 text-xs font-black uppercase tracking-widest transition-all">
-          <ArrowLeft size={16} /> Back
-        </button>
-
-        <div className="text-center mb-10 mt-6">
-          <div className="bg-white/10 w-16 h-16 rounded-2xl mx-auto mb-6 flex items-center justify-center text-pink-400 shadow-inner">
-            <GraduationCap size={32} />
-          </div>
-          <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white mb-2">
-            {isSignUp ? 'Create Gateway' : 'Portal Access'}
-          </h2>
-          <div className="flex items-center justify-center gap-2">
-             <span className="text-white/30 text-xs font-bold uppercase tracking-widest">Entering as</span>
-             <span className="px-3 py-1 rounded-lg bg-pink-500/10 border border-pink-500/20 text-pink-400 text-[10px] font-black uppercase tracking-widest">{role}</span>
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-md"
+      >
+        <div className="flex justify-center mb-8">
+          <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
+            <GraduationCap className="w-10 h-10 text-white" />
           </div>
         </div>
 
-        <form onSubmit={handleAuth} className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-white/30 uppercase tracking-[3px] ml-1">Universal Email</label>
-            <div className="relative group">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-pink-400 transition-colors" size={18} />
-              <input 
-                type="email" 
-                placeholder="identity@eduspere.xyz"
-                className="input-glass pl-12 h-14" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required 
-              />
+        <Card className="border-none shadow-xl bg-white">
+          <CardHeader className="space-y-1 text-center font-sans">
+            <CardTitle className="text-2xl font-bold tracking-tight text-slate-900 uppercase">Access Portal</CardTitle>
+            <CardDescription className="text-slate-500">
+              Initialize your connection to EduSphere
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button 
+                variant="outline" 
+                className="w-full h-11 flex items-center justify-center gap-2 border-slate-200"
+                onClick={handleGoogleLogin}
+                disabled={googleLoading}
+            >
+              {googleLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  <svg className="w-5 h-5" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.26.81-.58z" />
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                  </svg>
+                  Continue with Google
+                </>
+              )}
+            </Button>
+
+            <div className="relative py-2">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-slate-100" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-2 text-slate-400">Or continue with mail</span>
+              </div>
             </div>
-          </div>
-          
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-white/30 uppercase tracking-[3px] ml-1">Security Key</label>
-            <div className="relative group">
-              <ShieldCheckIcon />
-              <input 
-                type="password" 
-                placeholder="••••••••"
-                className="input-glass pl-12 h-14"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required 
-              />
-            </div>
-          </div>
 
-          <button 
-            disabled={loading}
-            className="btn-primary w-full h-16 text-lg font-black uppercase tracking-[4px] shadow-pink-500/20 group"
-          >
-            {loading ? 'Processing...' : (isSignUp ? 'Initialize Instance' : 'Enter Engine')}
-            <ArrowRight className="inline-block ml-3 group-hover:translate-x-2 transition-transform" />
-          </button>
-        </form>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-slate-700">Identity Mail</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="name@school.com"
+                    className="pl-10 h-11 border-slate-200 focus:ring-blue-500"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
 
-        <div className="relative my-10">
-          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/10"></div></div>
-          <div className="relative flex justify-center text-[10px] font-black uppercase tracking-[5px]"><span className="bg-black/20 px-4 text-white/30 backdrop-blur-md">Or Secure Path</span></div>
-        </div>
+              <div className="space-y-2">
+                <Label htmlFor="password text-slate-700">Security Key</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    className="pl-10 h-11 border-slate-200 focus:ring-blue-500"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
 
-        <button 
-          onClick={signInWithGoogle}
-          className="w-full h-14 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center gap-4 text-white font-bold hover:bg-white/10 transition-all hover:-translate-y-1"
-        >
-          <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5 grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
-          Continue via Google Protocol
-        </button>
-
-        <div className="mt-10 text-center">
-          <button 
-            onClick={() => setIsSignUp(!isSignUp)}
-            className="text-pink-400 font-black uppercase tracking-widest text-[10px] hover:text-white transition-colors"
-          >
-            {isSignUp ? 'Existing Instance? Log in' : 'No Instance? Create one'}
-          </button>
-        </div>
-      </div>
+              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 h-11 font-bold uppercase tracking-wider" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Authenticating...
+                  </>
+                ) : (
+                  <>
+                    Login to Portal
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </>
+                )}
+              </Button>
+            </form>
+          </CardContent>
+          <CardFooter className="pt-4 border-t border-slate-50 flex flex-col gap-4">
+             <p className="text-sm text-slate-500 text-center w-full">
+                Don't have an account?{' '}
+                <button 
+                  onClick={() => navigate(createPageUrl('Register'))}
+                  className="text-blue-600 font-bold hover:underline"
+                >
+                  Sign Up
+                </button>
+             </p>
+             <p className="text-[10px] text-slate-400 uppercase tracking-widest text-center w-full">EduSphere Institutional Network</p>
+          </CardFooter>
+        </Card>
+      </motion.div>
     </div>
   );
 }
-
-const ShieldCheckIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20">
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"></path>
-    <path d="m9 12 2 2 4-4"></path>
-  </svg>
-);

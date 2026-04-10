@@ -7,7 +7,7 @@ import {
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen relative overflow-hidden font-sans selection:bg-pink-500/30">
+    <div className="min-h-screen bg-[#050505] relative overflow-hidden font-sans selection:bg-pink-500/30">
       {/* Background Orbs */}
       <div className="absolute top-[-10%] left-[-10%] w-[50rem] h-[50rem] bg-purple-600 rounded-full mix-blend-screen filter blur-[150px] opacity-30 animate-pulse"></div>
       <div className="absolute top-[20%] right-[-10%] w-[45rem] h-[45rem] bg-pink-600 rounded-full mix-blend-screen filter blur-[150px] opacity-30 animate-pulse animation-delay-2000"></div>
